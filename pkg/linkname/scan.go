@@ -35,7 +35,7 @@ func scanFile(absPath, relPath string) []Record {
 		}}
 	}
 
-	hasUnsafe := fileImportsUnsafeBlank(file)
+	hasUnsafe := fileImportsUnsafe(file)
 
 	var out []Record
 	emit := func(doc *ast.CommentGroup, declName string, declKind DeclKind) {
@@ -117,19 +117,19 @@ func scanFile(absPath, relPath string) []Record {
 	return out
 }
 
-// fileImportsUnsafeBlank reports whether the file contains an
-// `import _ "unsafe"` statement. The compiler enables //go:linkname only in
-// files with this exact import, so it is recorded for diagnostics.
-func fileImportsUnsafeBlank(file *ast.File) bool {
+// fileImportsUnsafe reports whether the file imports "unsafe" in any form
+// (blank, named, or default). The compiler requires the importing file to
+// import "unsafe" for //go:linkname to be honored, but does not care
+// whether the import is blank-aliased; the runtime sources use both
+// `import _ "unsafe"` and plain `import "unsafe"` interchangeably alongside
+// linkname directives.
+func fileImportsUnsafe(file *ast.File) bool {
 	for _, imp := range file.Imports {
 		if imp.Path == nil {
 			continue
 		}
 		path, err := strconv.Unquote(imp.Path.Value)
-		if err != nil || path != "unsafe" {
-			continue
-		}
-		if imp.Name != nil && imp.Name.Name == "_" {
+		if err == nil && path == "unsafe" {
 			return true
 		}
 	}

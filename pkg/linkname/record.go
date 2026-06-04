@@ -36,7 +36,8 @@ const (
 // list so JSON consumers do not need null checks.
 const (
 	// WarnMissingUnsafeImport is emitted when a directive's file does
-	// not import "unsafe" (a Go compiler requirement).
+	// not import "unsafe" (a Go compiler requirement). Both `import "unsafe"`
+	// and `import _ "unsafe"` satisfy the requirement.
 	WarnMissingUnsafeImport = "missing-unsafe-import"
 
 	// WarnMalformedDirective is emitted when a directive cannot be
@@ -88,8 +89,8 @@ type Record struct {
 	Target *Target `json:"target"`
 
 	// HasUnsafeImport reports whether the file containing the directive
-	// has a blank import of "unsafe" (a Go compiler requirement for
-	// //go:linkname to be honored).
+	// imports "unsafe" (in any form -- blank, named, or default). The Go
+	// compiler requires this import for //go:linkname to be honored.
 	HasUnsafeImport bool `json:"hasUnsafeImport"`
 
 	// Warnings is a list of warning codes attached to this Record.
