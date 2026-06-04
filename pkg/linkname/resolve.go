@@ -93,6 +93,15 @@ func (r *resolver) packageDir(pkgPath string) (string, bool) {
 			return dir, true
 		}
 		return "", false
+	case r.module.IsStdlib:
+		// Stdlib import paths are unprefixed (e.g. "runtime",
+		// "crypto/internal/fips140"). Map them directly under the
+		// module root.
+		dir := filepath.Join(r.module.Root, filepath.FromSlash(pkgPath))
+		if fi, err := os.Stat(dir); err == nil && fi.IsDir() {
+			return dir, true
+		}
+		return "", false
 	}
 	return "", false
 }

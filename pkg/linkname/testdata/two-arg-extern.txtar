@@ -1,0 +1,84 @@
+-- go.mod --
+module example.com/m
+
+go 1.21
+-- cgo/cgo.go --
+package cgo
+
+import "unsafe"
+
+// _cgo_mmap is filled in by runtime/cgo when it is linked into the program.
+//
+//go:linkname _cgo_mmap _cgo_mmap
+var _cgo_mmap unsafe.Pointer
+-- tsan/tsan.go --
+package tsan
+
+import _ "unsafe"
+
+//go:linkname __tsan_init __tsan_init
+func __tsan_init()
+-- fips/fips.go --
+package fips
+
+import _ "unsafe"
+
+//go:linkname Linkinfo go:fipsinfo
+var Linkinfo []byte
+-- want.json --
+[
+  {
+    "schemaVersion": 1,
+    "file": "cgo/cgo.go",
+    "line": 7,
+    "col": 1,
+    "form": "two-arg-extern",
+    "localName": "_cgo_mmap",
+    "declName": "_cgo_mmap",
+    "declKind": "var",
+    "target": {
+      "raw": "_cgo_mmap",
+      "pkgPath": "",
+      "name": "",
+      "resolved": []
+    },
+    "hasUnsafeImport": true,
+    "warnings": []
+  },
+  {
+    "schemaVersion": 1,
+    "file": "fips/fips.go",
+    "line": 5,
+    "col": 1,
+    "form": "two-arg-extern",
+    "localName": "Linkinfo",
+    "declName": "Linkinfo",
+    "declKind": "var",
+    "target": {
+      "raw": "go:fipsinfo",
+      "pkgPath": "",
+      "name": "",
+      "resolved": []
+    },
+    "hasUnsafeImport": true,
+    "warnings": []
+  },
+  {
+    "schemaVersion": 1,
+    "file": "tsan/tsan.go",
+    "line": 5,
+    "col": 1,
+    "form": "two-arg-extern",
+    "localName": "__tsan_init",
+    "declName": "__tsan_init",
+    "declKind": "func",
+    "target": {
+      "raw": "__tsan_init",
+      "pkgPath": "",
+      "name": "",
+      "resolved": []
+    },
+    "hasUnsafeImport": true,
+    "warnings": []
+  }
+]

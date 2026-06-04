@@ -21,6 +21,17 @@ type Module struct {
 
 	// Path is the module path declared in go.mod (e.g. "example.com/m").
 	Path string
+
+	// IsStdlib reports whether this module is the Go standard library
+	// (`$GOROOT/src`). Detected by the combination of `module std' in
+	// go.mod *and* a `builtin/builtin.go' file at the module root --
+	// the latter has existed since Go 1.0 and is not part of any
+	// realistic user module that picks the name "std" by accident.
+	//
+	// Resolvers use this flag to treat unprefixed import paths
+	// (e.g. "runtime", "crypto/internal/fips140") as in-module, since
+	// stdlib import paths do not carry a `std/' prefix.
+	IsStdlib bool
 }
 
 // FindModule walks up from start until it finds a directory containing a
@@ -52,7 +63,11 @@ func FindModule(start string) (*Module, error) {
 			if modPath == "" {
 				return nil, fmt.Errorf("%s: missing module path", gomod)
 			}
-			return &Module{Root: dir, Path: modPath}, nil
+			return &Module{
+				Root:     dir,
+				Path:     modPath,
+				IsStdlib: detectStdlib(dir, modPath),
+			}, nil
 		}
 		parent := filepath.Dir(dir)
 		if parent == dir {
@@ -60,6 +75,19 @@ func FindModule(start string) (*Module, error) {
 		}
 		dir = parent
 	}
+}
+
+// detectStdlib reports whether root is the Go standard library tree.
+// True only when modPath is exactly "std" *and* a `builtin/builtin.go'
+// file exists at root -- the sentinel-file check guards against a
+// hypothetical user module that picks the name "std" by accident.
+func detectStdlib(root, modPath string) bool {
+	if modPath != "std" {
+		return false
+	}
+	sentinel := filepath.Join(root, "builtin", "builtin.go")
+	fi, err := os.Stat(sentinel)
+	return err == nil && !fi.IsDir()
 }
 
 // WalkGoFiles returns the relative paths (slash-separated, relative to

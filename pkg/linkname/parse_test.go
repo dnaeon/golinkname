@@ -75,14 +75,23 @@ func TestParseDirective(t *testing.T) {
 			},
 		},
 		{
-			name: "two-arg target without dot is malformed",
+			name: "two-arg target without dot is extern",
 			line: "//go:linkname foo runtime",
 			want: parsed{
-				form:      FormTwoArg,
+				form:      FormTwoArgExtern,
 				localName: "foo",
 				targetRaw: "runtime",
 				ok:        true,
-				warnings:  []string{WarnMalformedDirective},
+			},
+		},
+		{
+			name: "two-arg target with colon-prefixed magic is extern",
+			line: "//go:linkname Linkinfo go:fipsinfo",
+			want: parsed{
+				form:      FormTwoArgExtern,
+				localName: "Linkinfo",
+				targetRaw: "go:fipsinfo",
+				ok:        true,
 			},
 		},
 		{

@@ -1,0 +1,36 @@
+-- go.mod --
+module std
+
+go 1.21
+-- runtime/rand.go --
+package runtime
+
+func rand() uint64 { return 0 }
+-- hash/maphash/maphash_runtime.go --
+package maphash
+
+import _ "unsafe"
+
+//go:linkname runtime_rand runtime.rand
+func runtime_rand() uint64
+-- want.json --
+[
+  {
+    "schemaVersion": 1,
+    "file": "hash/maphash/maphash_runtime.go",
+    "line": 5,
+    "col": 1,
+    "form": "two-arg",
+    "localName": "runtime_rand",
+    "declName": "runtime_rand",
+    "declKind": "func",
+    "target": {
+      "raw": "runtime.rand",
+      "pkgPath": "runtime",
+      "name": "rand",
+      "resolved": []
+    },
+    "hasUnsafeImport": true,
+    "warnings": []
+  }
+]

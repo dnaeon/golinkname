@@ -60,7 +60,7 @@ func scanFile(absPath, relPath string) []Record {
 				HasUnsafeImport: hasUnsafe,
 				Warnings:        []string{},
 			}
-			if p.form == FormTwoArg {
+			if p.form == FormTwoArg || p.form == FormTwoArgExtern {
 				rec.Target = &Target{
 					Raw:      p.targetRaw,
 					PkgPath:  p.pkgPath,

@@ -43,14 +43,16 @@ type parsed struct {
 //
 //	//go:linkname localname                    (one-arg)
 //	//go:linkname localname pkgpath.name       (two-arg)
+//	//go:linkname localname symname            (two-arg-extern; cgo,
+//	                                            sanitizer hooks, FIPS info)
 //
 // The trailing-tail trim mirrors gopls (linkname.go): if a stray // appears
 // later on the line, everything from there is dropped and the remainder is
 // re-trimmed. This handles `//go:linkname f pkg.g //@hover(...)` style.
 //
-// Malformed inputs (wrong arg count, missing dot in target) still return
-// ok=true with form set conservatively and a warning recorded; callers
-// should attach the warnings to the emitted Record.
+// Malformed inputs (wrong arg count, leading/trailing dot in target) still
+// return ok=true with form set conservatively and a warning recorded;
+// callers should attach the warnings to the emitted Record.
 func parseDirective(line string) parsed {
 	if !strings.HasPrefix(line, directivePrefix) {
 		return parsed{}
@@ -79,18 +81,26 @@ func parseDirective(line string) parsed {
 		}
 	case 3:
 		p := parsed{
-			form:      FormTwoArg,
 			localName: parts[1],
 			targetRaw: parts[2],
 			ok:        true,
 		}
 		dot := strings.LastIndexByte(parts[2], '.')
-		if dot <= 0 || dot == len(parts[2])-1 {
+		switch {
+		case dot < 0:
+			// No dot: bare linker symbol (cgo C symbol, TSAN/libfuzzer
+			// hook, FIPS info identifier). Well-formed; no pkg.name to
+			// extract, no warning to emit.
+			p.form = FormTwoArgExtern
+		case dot == 0 || dot == len(parts[2])-1:
+			// Leading or trailing dot: genuinely malformed.
+			p.form = FormTwoArg
 			p.warnings = append(p.warnings, WarnMalformedDirective)
-			return p
+		default:
+			p.form = FormTwoArg
+			p.pkgPath = parts[2][:dot]
+			p.name = parts[2][dot+1:]
 		}
-		p.pkgPath = parts[2][:dot]
-		p.name = parts[2][dot+1:]
 		return p
 	default:
 		// Includes the "//go:linkname" with no arguments case (parts == 1)

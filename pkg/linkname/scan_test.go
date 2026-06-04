@@ -169,13 +169,34 @@ func outer() {
 			src: `package p
 import _ "unsafe"
 
-//go:linkname foo runtime
+//go:linkname foo .runtime
 func foo() string
 `,
 			wantLen: 1,
 			check: func(t *testing.T, recs []Record) {
 				if !slices.Contains(recs[0].Warnings, WarnMalformedDirective) {
 					t.Errorf("warnings = %v, want malformed-directive", recs[0].Warnings)
+				}
+			},
+		},
+		{
+			name: "two-arg-extern directive (cgo bare symbol) does not warn",
+			src: `package p
+import _ "unsafe"
+
+//go:linkname _cgo_mmap _cgo_mmap
+var _cgo_mmap unsafe.Pointer
+`,
+			wantLen: 1,
+			check: func(t *testing.T, recs []Record) {
+				if recs[0].Form != FormTwoArgExtern {
+					t.Errorf("form = %q, want %q", recs[0].Form, FormTwoArgExtern)
+				}
+				if slices.Contains(recs[0].Warnings, WarnMalformedDirective) {
+					t.Errorf("warnings = %v, want no malformed-directive", recs[0].Warnings)
+				}
+				if recs[0].Target == nil || recs[0].Target.Raw != "_cgo_mmap" {
+					t.Errorf("target = %#v, want raw=%q", recs[0].Target, "_cgo_mmap")
 				}
 			},
 		},

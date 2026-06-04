@@ -21,6 +21,15 @@ const (
 	// FormTwoArg is the two-argument form: //go:linkname localname pkgpath.name.
 	// Used on the consuming side to alias a foreign symbol.
 	FormTwoArg Form = "two-arg"
+
+	// FormTwoArgExtern is the two-argument form whose second argument
+	// is a bare linker symbol with no `pkgpath.name' shape:
+	//   //go:linkname localname symname
+	// The symbol is not a Go target -- it is supplied by cgo, the
+	// runtime, a sanitizer (TSAN/libfuzzer), or a special compiler
+	// identifier (e.g. `go:fipsinfo'). Well-formed, just not navigable
+	// to a Go declaration; resolvers leave `Target.Resolved' empty.
+	FormTwoArgExtern Form = "two-arg-extern"
 )
 
 // DeclKind classifies the declaration the directive sits on.

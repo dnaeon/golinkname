@@ -7,8 +7,11 @@ package a
 
 import _ "unsafe"
 
-//go:linkname foo runtime
+//go:linkname foo .runtime
 func foo() string
+
+//go:linkname bar runtime.
+func bar() string
 -- want.json --
 [
   {
@@ -21,7 +24,25 @@ func foo() string
     "declName": "foo",
     "declKind": "func",
     "target": {
-      "raw": "runtime",
+      "raw": ".runtime",
+      "pkgPath": "",
+      "name": "",
+      "resolved": []
+    },
+    "hasUnsafeImport": true,
+    "warnings": ["malformed-directive"]
+  },
+  {
+    "schemaVersion": 1,
+    "file": "a/a.go",
+    "line": 8,
+    "col": 1,
+    "form": "two-arg",
+    "localName": "bar",
+    "declName": "bar",
+    "declKind": "func",
+    "target": {
+      "raw": "runtime.",
       "pkgPath": "",
       "name": "",
       "resolved": []
