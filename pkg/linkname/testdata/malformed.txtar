@@ -1,0 +1,32 @@
+-- go.mod --
+module example.com/m
+
+go 1.21
+-- a/a.go --
+package a
+
+import _ "unsafe"
+
+//go:linkname foo runtime
+func foo() string
+-- want.json --
+[
+  {
+    "schemaVersion": 1,
+    "file": "a/a.go",
+    "line": 5,
+    "col": 1,
+    "form": "two-arg",
+    "localName": "foo",
+    "declName": "foo",
+    "declKind": "func",
+    "target": {
+      "raw": "runtime",
+      "pkgPath": "",
+      "name": "",
+      "resolved": []
+    },
+    "hasUnsafeImport": true,
+    "warnings": ["malformed-directive"]
+  }
+]

@@ -1,0 +1,36 @@
+-- go.mod --
+module example.com/m
+
+go 1.21
+-- a/a.go --
+package a
+
+//go:linkname foo example.com/m/b.bar
+func foo() string
+-- b/b.go --
+package b
+
+func bar() string { return "" }
+-- want.json --
+[
+  {
+    "schemaVersion": 1,
+    "file": "a/a.go",
+    "line": 3,
+    "col": 1,
+    "form": "two-arg",
+    "localName": "foo",
+    "declName": "foo",
+    "declKind": "func",
+    "target": {
+      "raw": "example.com/m/b.bar",
+      "pkgPath": "example.com/m/b",
+      "name": "bar",
+      "resolved": [
+        {"file": "b/b.go", "line": 3, "col": 6, "inModule": true}
+      ]
+    },
+    "hasUnsafeImport": false,
+    "warnings": ["missing-unsafe-import"]
+  }
+]

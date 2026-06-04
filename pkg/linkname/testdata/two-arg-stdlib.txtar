@@ -1,0 +1,32 @@
+-- go.mod --
+module example.com/m
+
+go 1.21
+-- a/a.go --
+package a
+
+import _ "unsafe"
+
+//go:linkname gopark runtime.gopark
+func gopark(unlockf func() bool, reason uint8, traceEv byte, traceskip int)
+-- want.json --
+[
+  {
+    "schemaVersion": 1,
+    "file": "a/a.go",
+    "line": 5,
+    "col": 1,
+    "form": "two-arg",
+    "localName": "gopark",
+    "declName": "gopark",
+    "declKind": "func",
+    "target": {
+      "raw": "runtime.gopark",
+      "pkgPath": "runtime",
+      "name": "gopark",
+      "resolved": []
+    },
+    "hasUnsafeImport": true,
+    "warnings": []
+  }
+]

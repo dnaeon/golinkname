@@ -1,0 +1,54 @@
+-- go.mod --
+module example.com/m
+
+go 1.21
+-- upper/upper.go --
+package upper
+
+import _ "unsafe"
+
+//go:linkname g
+func g()
+-- lower/lower.go --
+package lower
+
+import _ "unsafe"
+
+//go:linkname f example.com/m/upper.g
+func f() { println("hi") }
+-- want.json --
+[
+  {
+    "schemaVersion": 1,
+    "file": "lower/lower.go",
+    "line": 5,
+    "col": 1,
+    "form": "two-arg",
+    "localName": "f",
+    "declName": "f",
+    "declKind": "func",
+    "target": {
+      "raw": "example.com/m/upper.g",
+      "pkgPath": "example.com/m/upper",
+      "name": "g",
+      "resolved": [
+        {"file": "upper/upper.go", "line": 6, "col": 6, "inModule": true}
+      ]
+    },
+    "hasUnsafeImport": true,
+    "warnings": []
+  },
+  {
+    "schemaVersion": 1,
+    "file": "upper/upper.go",
+    "line": 5,
+    "col": 1,
+    "form": "one-arg",
+    "localName": "g",
+    "declName": "g",
+    "declKind": "func",
+    "target": null,
+    "hasUnsafeImport": true,
+    "warnings": []
+  }
+]

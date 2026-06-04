@@ -1,0 +1,27 @@
+-- go.mod --
+module example.com/m
+
+go 1.21
+-- a/a.go --
+package a
+
+import _ "unsafe"
+
+//go:linkname foo
+func foo() string { return "" }
+-- want.json --
+[
+  {
+    "schemaVersion": 1,
+    "file": "a/a.go",
+    "line": 5,
+    "col": 1,
+    "form": "one-arg",
+    "localName": "foo",
+    "declName": "foo",
+    "declKind": "func",
+    "target": null,
+    "hasUnsafeImport": true,
+    "warnings": []
+  }
+]

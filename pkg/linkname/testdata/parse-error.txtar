@@ -1,0 +1,41 @@
+-- go.mod --
+module example.com/m
+
+go 1.21
+-- ok/ok.go --
+package ok
+
+import _ "unsafe"
+
+//go:linkname foo example.com/m/ok.bar
+func foo() string
+
+func bar() string { return "" }
+-- broken/broken.go --
+package broken
+
+func not valid go syntax
+-- want.json --
+[
+  {"file": "broken/broken.go", "schemaVersion": 1, "parseError": "PRESENT"},
+  {
+    "schemaVersion": 1,
+    "file": "ok/ok.go",
+    "line": 5,
+    "col": 1,
+    "form": "two-arg",
+    "localName": "foo",
+    "declName": "foo",
+    "declKind": "func",
+    "target": {
+      "raw": "example.com/m/ok.bar",
+      "pkgPath": "example.com/m/ok",
+      "name": "bar",
+      "resolved": [
+        {"file": "ok/ok.go", "line": 8, "col": 6, "inModule": true}
+      ]
+    },
+    "hasUnsafeImport": true,
+    "warnings": []
+  }
+]

@@ -1,0 +1,72 @@
+-- go.mod --
+module example.com/m
+
+go 1.21
+-- a/a.go --
+package a
+
+import _ "unsafe"
+
+// Bare-var layout: directive sits on the GenDecl's Doc.
+//
+//go:linkname single example.com/m/b.singleTarget
+var single int
+
+// Group docstring above the block; not a directive.
+var (
+	// Per-spec docstring; not a directive either.
+	first int
+
+	//go:linkname inBlock example.com/m/b.inBlockTarget
+	inBlock int
+
+	last int
+)
+-- b/b.go --
+package b
+
+var singleTarget int
+var inBlockTarget int
+-- want.json --
+[
+  {
+    "schemaVersion": 1,
+    "file": "a/a.go",
+    "line": 7,
+    "col": 1,
+    "form": "two-arg",
+    "localName": "single",
+    "declName": "single",
+    "declKind": "var",
+    "target": {
+      "raw": "example.com/m/b.singleTarget",
+      "pkgPath": "example.com/m/b",
+      "name": "singleTarget",
+      "resolved": [
+        {"file": "b/b.go", "line": 3, "col": 5, "inModule": true}
+      ]
+    },
+    "hasUnsafeImport": true,
+    "warnings": []
+  },
+  {
+    "schemaVersion": 1,
+    "file": "a/a.go",
+    "line": 15,
+    "col": 2,
+    "form": "two-arg",
+    "localName": "inBlock",
+    "declName": "inBlock",
+    "declKind": "var",
+    "target": {
+      "raw": "example.com/m/b.inBlockTarget",
+      "pkgPath": "example.com/m/b",
+      "name": "inBlockTarget",
+      "resolved": [
+        {"file": "b/b.go", "line": 4, "col": 5, "inModule": true}
+      ]
+    },
+    "hasUnsafeImport": true,
+    "warnings": []
+  }
+]
