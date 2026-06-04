@@ -17,7 +17,7 @@ import (
 // scope of a single Module. The current scope is intentionally narrow: only
 // targets that map to a directory inside the module's own tree are
 // resolved. Stdlib and external-dependency targets are left unresolved
-// (Resolve returns an empty slice without error).
+// (resolve returns an empty slice without error).
 type resolver struct {
 	module *Module
 }
@@ -26,14 +26,14 @@ func newResolver(m *Module) *resolver {
 	return &resolver{module: m}
 }
 
-// Resolve returns every top-level declaration of name inside pkgPath, when
+// resolve returns every top-level declaration of name inside pkgPath, when
 // pkgPath maps to a directory in the module. Multiple results are possible
 // when build-tag-gated source files declare the same name; we record all
 // of them since we do not evaluate build tags.
 //
 // An empty result with a nil error means "could not be resolved within the
 // configured scope" -- not an error condition.
-func (r *resolver) Resolve(pkgPath, name string) []ResolvedLocation {
+func (r *resolver) resolve(pkgPath, name string) []ResolvedLocation {
 	if pkgPath == "" || name == "" {
 		return nil
 	}
