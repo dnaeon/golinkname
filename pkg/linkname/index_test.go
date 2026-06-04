@@ -115,30 +115,13 @@ func runTxtarFixture(t *testing.T, fixturePath string) {
 	}
 }
 
-// marshalRecords renders records as indented JSON. Empty Resolved slices
-// are preserved as []. Records with parseError are emitted compactly
-// (no zero fields).
+// marshalRecords renders records as indented JSON. Record.MarshalJSON
+// handles the parseError compact shape; this helper just produces the
+// per-record indentation the goldens expect.
 func marshalRecords(records []Record) ([]byte, error) {
-	// Use a per-record encoder so parseError records don't carry the rest
-	// of Record's zero-value baggage in the output.
-	type compactErrRecord struct {
-		SchemaVersion int    `json:"schemaVersion"`
-		File          string `json:"file"`
-		ParseError    string `json:"parseError"`
-	}
 	var pieces []json.RawMessage
 	for _, r := range records {
-		var raw []byte
-		var err error
-		if r.ParseError != "" {
-			raw, err = json.MarshalIndent(compactErrRecord{
-				SchemaVersion: r.SchemaVersion,
-				File:          r.File,
-				ParseError:    r.ParseError,
-			}, "  ", "  ")
-		} else {
-			raw, err = json.MarshalIndent(r, "  ", "  ")
-		}
+		raw, err := json.MarshalIndent(r, "  ", "  ")
 		if err != nil {
 			return nil, err
 		}

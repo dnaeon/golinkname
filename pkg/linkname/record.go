@@ -4,6 +4,8 @@
 
 package linkname
 
+import "encoding/json"
+
 // SchemaVersion is the version of the JSON output format. Bump when
 // consumers must change to keep working.
 const SchemaVersion = 1
@@ -97,6 +99,22 @@ type Record struct {
 	// Always non-nil; serialized as an empty array when clean so JSON
 	// consumers do not need null checks.
 	Warnings []string `json:"warnings"`
+}
+
+// MarshalJSON emits the compact `{schemaVersion, file, parseError}` shape
+// for parse-error records, and the full struct otherwise. The compact
+// shape is part of the schema-v1 contract: consumers discriminate on
+// (parseError != "") without having to ignore zeroed fields.
+func (r Record) MarshalJSON() ([]byte, error) {
+	if r.ParseError != "" {
+		return json.Marshal(struct {
+			SchemaVersion int    `json:"schemaVersion"`
+			File          string `json:"file"`
+			ParseError    string `json:"parseError"`
+		}{r.SchemaVersion, r.File, r.ParseError})
+	}
+	type recordJSON Record
+	return json.Marshal(recordJSON(r))
 }
 
 // Target is the second argument of a two-argument //go:linkname directive.
