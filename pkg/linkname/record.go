@@ -90,7 +90,7 @@ type Record struct {
 	// HasUnsafeImport reports whether the file containing the directive
 	// has a blank import of "unsafe" (a Go compiler requirement for
 	// //go:linkname to be honored).
-	HasUnsafeImport bool `json:"hasUnsafeImport,omitempty"`
+	HasUnsafeImport bool `json:"hasUnsafeImport"`
 
 	// Warnings is a list of warning codes attached to this Record.
 	// Always non-nil; serialized as an empty array when clean so JSON
