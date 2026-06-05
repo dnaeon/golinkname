@@ -1,0 +1,40 @@
+-- go.mod --
+module example.com/m
+
+go 1.21
+-- a/a.go --
+package a
+
+import _ "unsafe"
+
+//go:linkname genPtr example.com/m/b.(*T).Get
+func genPtr() int
+-- b/b.go --
+package b
+
+type T[V any] struct{ v V }
+
+func (t *T[V]) Get() V { return t.v }
+-- want.json --
+[
+  {
+    "schemaVersion": 1,
+    "file": "a/a.go",
+    "line": 5,
+    "col": 1,
+    "form": "two-arg",
+    "direction": "pull",
+    "localName": "genPtr",
+    "declName": "genPtr",
+    "declKind": "func",
+    "target": {
+      "raw": "example.com/m/b.(*T).Get",
+      "pkgPath": "example.com/m/b",
+      "name": "Get",
+      "recvType": "T",
+      "resolved": []
+    },
+    "hasUnsafeImport": true,
+    "warnings": []
+  }
+]

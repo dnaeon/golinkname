@@ -1,0 +1,47 @@
+-- go.mod --
+module example.com/m
+
+go 1.21
+-- a/a.go --
+package a
+
+import _ "unsafe"
+
+// Outer embeds Inner; Outer.Hello is reachable at the type level via the
+// embedded field, but no top-level FuncDecl declares (Outer).Hello -- it
+// lives on Inner. The directive parses fine and recvType is captured,
+// but the resolver only walks top-level FuncDecls so the target stays
+// unresolved.
+//go:linkname embedded example.com/m/b.(*Outer).Hello
+func embedded() string
+-- b/b.go --
+package b
+
+type Inner struct{}
+
+func (i *Inner) Hello() string { return "hi" }
+
+type Outer struct{ Inner }
+-- want.json --
+[
+  {
+    "schemaVersion": 1,
+    "file": "a/a.go",
+    "line": 10,
+    "col": 1,
+    "form": "two-arg",
+    "direction": "pull",
+    "localName": "embedded",
+    "declName": "embedded",
+    "declKind": "func",
+    "target": {
+      "raw": "example.com/m/b.(*Outer).Hello",
+      "pkgPath": "example.com/m/b",
+      "name": "Hello",
+      "recvType": "Outer",
+      "resolved": []
+    },
+    "hasUnsafeImport": true,
+    "warnings": []
+  }
+]

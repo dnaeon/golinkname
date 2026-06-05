@@ -1,0 +1,133 @@
+-- go.mod --
+module example.com/m
+
+go 1.21
+-- a/a.go --
+package a
+
+import _ "unsafe"
+
+// One-arg directive on a var with an initializer: the var-equivalent
+// of Case 1 (function with body). The author owns the storage and is
+// publishing it under its own canonical name for other packages to
+// linkname-pull. Mirrors database/sql.drivers in the stdlib.
+//
+//go:linkname drivers
+var drivers = make(map[string]int)
+
+// Two-arg directive on a var with an initializer: Case 3 equivalent.
+// The author owns the storage and is publishing it under a foreign
+// linker name.
+//
+//go:linkname renamed example.com/m/b.target
+var renamed = 42
+
+// Same shape inside a var block.
+var (
+	//go:linkname blockPush example.com/m/b.blockPushTarget
+	blockPush = []int{1, 2, 3}
+
+	//go:linkname blockPull example.com/m/b.blockPullTarget
+	blockPull []int
+)
+-- b/b.go --
+package b
+
+var target int
+var blockPushTarget []int
+var blockPullTarget []int
+-- want.json --
+[
+  {
+    "schemaVersion": 1,
+    "file": "a/a.go",
+    "line": 10,
+    "col": 1,
+    "form": "one-arg",
+    "direction": "push",
+    "localName": "drivers",
+    "declName": "drivers",
+    "declKind": "var",
+    "target": null,
+    "hasUnsafeImport": true,
+    "warnings": []
+  },
+  {
+    "schemaVersion": 1,
+    "file": "a/a.go",
+    "line": 17,
+    "col": 1,
+    "form": "two-arg",
+    "direction": "push",
+    "localName": "renamed",
+    "declName": "renamed",
+    "declKind": "var",
+    "target": {
+      "raw": "example.com/m/b.target",
+      "pkgPath": "example.com/m/b",
+      "name": "target",
+      "resolved": [
+        {
+          "file": "b/b.go",
+          "line": 3,
+          "col": 5,
+          "inModule": true
+        }
+      ]
+    },
+    "hasUnsafeImport": true,
+    "warnings": []
+  },
+  {
+    "schemaVersion": 1,
+    "file": "a/a.go",
+    "line": 22,
+    "col": 2,
+    "form": "two-arg",
+    "direction": "push",
+    "localName": "blockPush",
+    "declName": "blockPush",
+    "declKind": "var",
+    "target": {
+      "raw": "example.com/m/b.blockPushTarget",
+      "pkgPath": "example.com/m/b",
+      "name": "blockPushTarget",
+      "resolved": [
+        {
+          "file": "b/b.go",
+          "line": 4,
+          "col": 5,
+          "inModule": true
+        }
+      ]
+    },
+    "hasUnsafeImport": true,
+    "warnings": []
+  },
+  {
+    "schemaVersion": 1,
+    "file": "a/a.go",
+    "line": 25,
+    "col": 2,
+    "form": "two-arg",
+    "direction": "pull",
+    "localName": "blockPull",
+    "declName": "blockPull",
+    "declKind": "var",
+    "target": {
+      "raw": "example.com/m/b.blockPullTarget",
+      "pkgPath": "example.com/m/b",
+      "name": "blockPullTarget",
+      "resolved": [
+        {
+          "file": "b/b.go",
+          "line": 5,
+          "col": 5,
+          "inModule": true
+        }
+      ]
+    },
+    "hasUnsafeImport": true,
+    "warnings": []
+  }
+]

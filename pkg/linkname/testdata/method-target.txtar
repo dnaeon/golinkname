@@ -1,0 +1,81 @@
+-- go.mod --
+module example.com/m
+
+go 1.21
+-- a/a.go --
+package a
+
+import _ "unsafe"
+
+//go:linkname badPtr example.com/m/b.(*T).Ptr
+func badPtr(*int) int
+
+//go:linkname badVal example.com/m/b.(T).Val
+func badVal(int) int
+-- b/b.go --
+package b
+
+type T struct{}
+
+func (t *T) Ptr() int { return 0 }
+
+func (t T) Val() int { return 0 }
+
+func Ptr() int { return 0 }
+-- want.json --
+[
+  {
+    "schemaVersion": 1,
+    "file": "a/a.go",
+    "line": 5,
+    "col": 1,
+    "form": "two-arg",
+    "direction": "pull",
+    "localName": "badPtr",
+    "declName": "badPtr",
+    "declKind": "func",
+    "target": {
+      "raw": "example.com/m/b.(*T).Ptr",
+      "pkgPath": "example.com/m/b",
+      "name": "Ptr",
+      "recvType": "T",
+      "resolved": [
+        {
+          "file": "b/b.go",
+          "line": 5,
+          "col": 13,
+          "inModule": true
+        }
+      ]
+    },
+    "hasUnsafeImport": true,
+    "warnings": []
+  },
+  {
+    "schemaVersion": 1,
+    "file": "a/a.go",
+    "line": 8,
+    "col": 1,
+    "form": "two-arg",
+    "direction": "pull",
+    "localName": "badVal",
+    "declName": "badVal",
+    "declKind": "func",
+    "target": {
+      "raw": "example.com/m/b.(T).Val",
+      "pkgPath": "example.com/m/b",
+      "name": "Val",
+      "recvType": "T",
+      "resolved": [
+        {
+          "file": "b/b.go",
+          "line": 7,
+          "col": 12,
+          "inModule": true
+        }
+      ]
+    },
+    "hasUnsafeImport": true,
+    "warnings": []
+  }
+]

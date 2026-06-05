@@ -1,0 +1,47 @@
+-- go.mod --
+module example.com/m
+
+go 1.21
+-- a/a.go --
+package a
+
+import _ "unsafe"
+
+// Go identifiers may contain non-ASCII letters. The parser accepts them;
+// our extractor must round-trip them through localName/declName/target
+// without mangling.
+//go:linkname Ω example.com/m/b.Ω
+func Ω() int
+-- b/b.go --
+package b
+
+func Ω() int { return 0 }
+-- want.json --
+[
+  {
+    "schemaVersion": 1,
+    "file": "a/a.go",
+    "line": 8,
+    "col": 1,
+    "form": "two-arg",
+    "direction": "pull",
+    "localName": "Ω",
+    "declName": "Ω",
+    "declKind": "func",
+    "target": {
+      "raw": "example.com/m/b.Ω",
+      "pkgPath": "example.com/m/b",
+      "name": "Ω",
+      "resolved": [
+        {
+          "file": "b/b.go",
+          "line": 3,
+          "col": 6,
+          "inModule": true
+        }
+      ]
+    },
+    "hasUnsafeImport": true,
+    "warnings": []
+  }
+]
