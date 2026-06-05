@@ -43,6 +43,61 @@ const (
 	DeclVar DeclKind = "var"
 )
 
+// Direction classifies a directive as a push (this side has the body and is
+// publishing it under a linker name) or a pull (this side has no body and is
+// asking the linker to fill it in from elsewhere).
+//
+// Direction is a function of (Form, has-body). The cases:
+//
+// One-arg with body -- push (Case 1).
+// The declaration has a real implementation; the directive publishes it under
+// the decl's own name (`<currentpkg>.<localname>`). Consumers in other
+// packages pull from this side.
+//
+// One-arg, bodyless -- pull (Case 2).
+// The declaration has no body; the directive opens a slot at the decl's own
+// name (`<currentpkg>.<localname>`) for the linker to fill in. The body comes
+// from a matching two-arg push elsewhere whose target argument names this slot.
+//
+// Two-arg with body -- push (Case 3).
+// The declaration has a real implementation; the directive publishes it under
+// the foreign linker name given as the second argument. Used both to expose
+// runtime internals to higher-level packages without committing to public API,
+// and to bridge genuine peer import cycles (e.g. testing <-> testing/synctest).
+//
+// Two-arg, bodyless -- pull (Case 4).
+// The declaration has no body; the directive opens a slot at the decl's own
+// name and binds it to the foreign symbol given as the second argument. The
+// body must exist somewhere -- a Case 1 or Case 3 push.
+//
+// Two-arg-extern, any body -- pull.
+// The target is a bare linker symbol provided by cgo, assembly, FIPS, or a
+// sanitizer hook (TSAN/libfuzzer). Never a Go-side body.
+//
+// Vars: the var-equivalent of "has body" is "has an initializer expression". An
+// initialized var (`var X = expr') owns its storage and is the push side; a
+// bodyless var declaration (`var X T') is a slot the linker rebinds and is the
+// pull side. The four cases above apply unchanged: one-arg + initializer is
+// Case 1 (e.g. database/sql publishing `drivers'); two-arg + bodyless is Case 4
+// (e.g. internal/runtime/maps pulling `runtime.zeroVal').
+//
+// Empty for malformed directives (we cannot classify what we cannot parse) and
+// for parse-error records.
+type Direction string
+
+const (
+	// DirectionPush marks a directive whose declaration carries the real
+	// implementation -- the linker publishes it under either the
+	// declaration's own canonical name (one-arg) or a foreign name
+	// (two-arg). Consumers pull from this side.
+	DirectionPush Direction = "push"
+
+	// DirectionPull marks a directive whose declaration is bodyless (or a
+	// var) and expects an implementation supplied elsewhere by a matching
+	// push, by cgo, by assembly, or by a sanitizer hook.
+	DirectionPull Direction = "pull"
+)
+
 // Warning codes attached to records. Always serialized as a possibly-empty
 // list so JSON consumers do not need null checks.
 const (
@@ -66,8 +121,8 @@ type Record struct {
 	// Always equal to the package-level SchemaVersion constant.
 	SchemaVersion int `json:"schemaVersion"`
 
-	// File is the module-relative, slash-separated path of the source
-	// file the directive was observed in.
+	// File is the module-relative, slash-separated path of the source file
+	// the directive was observed in.
 	File string `json:"file"`
 
 	// ParseError, when non-empty, marks this Record as a per-file parse
@@ -83,8 +138,13 @@ type Record struct {
 	// Form is the syntactic form of the directive (one-arg or two-arg).
 	Form Form `json:"form,omitempty"`
 
-	// LocalName is the first argument of the directive -- the symbol in
-	// the current package the directive applies to.
+	// Direction classifies the directive as a push or pull. See Direction's
+	// docstring for the (form, has-body) -> direction table. Empty for
+	// malformed directives and parse-error records.
+	Direction Direction `json:"direction,omitempty"`
+
+	// LocalName is the first argument of the directive -- the symbol in the
+	// current package the directive applies to.
 	LocalName string `json:"localName,omitempty"`
 
 	// DeclName is the name of the Go declaration the directive sits on.
@@ -95,8 +155,8 @@ type Record struct {
 	// DeclKind classifies the declaration the directive sits on (func or var).
 	DeclKind DeclKind `json:"declKind,omitempty"`
 
-	// Target is the parsed second argument of a two-arg directive. Nil
-	// for FormOneArg directives.
+	// Target is the parsed second argument of a two-arg directive. Nil for
+	// FormOneArg directives.
 	Target *Target `json:"target"`
 
 	// HasUnsafeImport reports whether the file containing the directive
