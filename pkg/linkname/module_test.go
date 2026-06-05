@@ -56,7 +56,7 @@ func TestFindModule(t *testing.T) {
 	})
 
 	t.Run("no enclosing module", func(t *testing.T) {
-		// Use os.TempDir's parent -- root or near-root, won't have go.mod.
+		// Use [os.TempDir]'s parent -- root or near-root, won't have go.mod.
 		bare := t.TempDir()
 		// Don't create go.mod; just walk from a subdir that doesn't exist.
 		nonexistent := filepath.Join(bare, "nope")

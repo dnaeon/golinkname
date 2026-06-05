@@ -85,7 +85,7 @@ func TestCLI_Help(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("--help: exit=%d, want 0", code)
 	}
-	for _, want := range []string{"index", "refs", "list"} {
+	for _, want := range []string{"index", "refs", "related", "list"} {
 		if !strings.Contains(stdout, want) {
 			t.Errorf("--help: stdout missing %q; got %q", want, stdout)
 		}
@@ -153,6 +153,40 @@ func TestCLI_IndexPretty(t *testing.T) {
 	}
 }
 
+func TestCLI_Index_FileFilter_Match(t *testing.T) {
+	// `index --file' restricts JSON output to records whose `file' field
+	// matches exactly. The paired-push-pull fixture has directives in two
+	// files; filtering to one returns just that file's record.
+	dir := extractFixture(t, "paired-push-pull.txtar")
+	stdout, stderr, code := runCLI(t, "index", "--dir", dir, "--file", "lower/lower.go")
+	if code != 0 {
+		t.Fatalf("exit=%d, stderr=%q", code, stderr)
+	}
+	var got []map[string]any
+	if err := json.Unmarshal([]byte(stdout), &got); err != nil {
+		t.Fatalf("invalid JSON: %v\n%s", err, stdout)
+	}
+	if len(got) != 1 {
+		t.Fatalf("got %d records, want 1", len(got))
+	}
+	if got[0]["file"] != "lower/lower.go" {
+		t.Errorf("file=%v, want lower/lower.go", got[0]["file"])
+	}
+}
+
+func TestCLI_Index_FileFilter_NoMatch(t *testing.T) {
+	// A non-matching path returns an empty JSON array, not an error --
+	// "no directives in this file" is a real answer.
+	dir := extractFixture(t, "paired-push-pull.txtar")
+	stdout, stderr, code := runCLI(t, "index", "--dir", dir, "--file", "nonexistent.go")
+	if code != 0 {
+		t.Fatalf("exit=%d, stderr=%q", code, stderr)
+	}
+	if got := strings.TrimSpace(stdout); got != "[]" {
+		t.Errorf("no-match: stdout=%q, want []", got)
+	}
+}
+
 func TestCLI_Refs_FlagAfterPositional(t *testing.T) {
 	// urfave/cli supports interspersed flags, unlike stdlib `flag`. This
 	// is one of the reasons we ported.
@@ -209,13 +243,91 @@ func TestCLI_Refs_WrongArity(t *testing.T) {
 	}
 }
 
+func TestCLI_Related_BothDirections(t *testing.T) {
+	// `related' is symmetric: standing on either side of a paired push/pull
+	// bridge should surface both directives. The paired-push-pull fixture
+	// has a Case 2 pull at upper.g and a Case 3 push at lower.f targeting
+	// upper.g. Querying for upper.g returns both.
+	dir := extractFixture(t, "paired-push-pull.txtar")
+	stdout, stderr, code := runCLI(t, "related", "--dir", dir, "example.com/m/upper.g")
+	if code != 0 {
+		t.Fatalf("exit=%d, stderr=%q", code, stderr)
+	}
+	var got []map[string]any
+	if err := json.Unmarshal([]byte(stdout), &got); err != nil {
+		t.Fatalf("invalid JSON: %v\n%s", err, stdout)
+	}
+	if len(got) != 2 {
+		t.Fatalf("got %d related, want 2 (both ends of the bridge)\n%s", len(got), stdout)
+	}
+	files := map[string]bool{}
+	for _, r := range got {
+		files[r["file"].(string)] = true
+	}
+	if !files["upper/upper.go"] || !files["lower/lower.go"] {
+		t.Errorf("missing one side of the bridge; got files=%v", files)
+	}
+}
+
+func TestCLI_Related_QueryOwnLocal(t *testing.T) {
+	// Querying by the local-side qualified name (`example.com/m/lower.f')
+	// must also return the directive on lower.go -- this is the case where
+	// the user is standing on the directive's own decl, not its target.
+	dir := extractFixture(t, "paired-push-pull.txtar")
+	stdout, stderr, code := runCLI(t, "related", "--dir", dir, "example.com/m/lower.f")
+	if code != 0 {
+		t.Fatalf("exit=%d, stderr=%q", code, stderr)
+	}
+	var got []map[string]any
+	if err := json.Unmarshal([]byte(stdout), &got); err != nil {
+		t.Fatalf("invalid JSON: %v\n%s", err, stdout)
+	}
+	if len(got) != 1 {
+		t.Fatalf("got %d related, want 1 (the directive at point)\n%s", len(got), stdout)
+	}
+	if got[0]["file"] != "lower/lower.go" {
+		t.Errorf("got file=%v, want lower/lower.go", got[0]["file"])
+	}
+}
+
+func TestCLI_Related_NoMatch(t *testing.T) {
+	dir := extractFixture(t, "paired-push-pull.txtar")
+	stdout, stderr, code := runCLI(t, "related", "--dir", dir, "example.com/m/upper.nope")
+	if code != 0 {
+		t.Fatalf("exit=%d, stderr=%q", code, stderr)
+	}
+	if got := strings.TrimSpace(stdout); got != "[]" {
+		t.Errorf("no-match: stdout=%q, want []", got)
+	}
+}
+
+func TestCLI_Related_BadQuery(t *testing.T) {
+	dir := extractFixture(t, "paired-push-pull.txtar")
+	for _, q := range []string{"nodot", ".leading", "trailing."} {
+		_, _, code := runCLI(t, "related", "--dir", dir, q)
+		if code != 1 {
+			t.Errorf("query %q: exit=%d, want 1", q, code)
+		}
+	}
+}
+
+func TestCLI_Related_WrongArity(t *testing.T) {
+	_, _, code := runCLI(t, "related")
+	if code != 1 {
+		t.Fatalf("missing arg: exit=%d, want 1", code)
+	}
+}
+
 func TestCLI_List(t *testing.T) {
 	dir := extractFixture(t, "two-arg-in-module.txtar")
 	stdout, stderr, code := runCLI(t, "list", "--dir", dir)
 	if code != 0 {
 		t.Fatalf("exit=%d, stderr=%q", code, stderr)
 	}
-	for _, want := range []string{"FILE:LINE", "a/a.go:5", "example.com/m/b.bar"} {
+	// `func/two-arg' is the combined kind/form rendering: a separate
+	// KIND column would push the table past most terminal widths, so
+	// the FORM column carries both. The header is unchanged ("FORM").
+	for _, want := range []string{"FILE:LINE", "a/a.go:5", "example.com/m/b.bar", "func/two-arg"} {
 		if !strings.Contains(stdout, want) {
 			t.Errorf("list: missing %q; got %q", want, stdout)
 		}

@@ -157,6 +157,45 @@ func TestParseDirective(t *testing.T) {
 			line: "//go:linknameFoo bar",
 			want: parsed{},
 		},
+		{
+			name: "method target with pointer receiver",
+			line: "//go:linkname x reflect.(*rtype).Align",
+			want: parsed{
+				form:      FormTwoArg,
+				localName: "x",
+				targetRaw: "reflect.(*rtype).Align",
+				pkgPath:   "reflect",
+				name:      "Align",
+				recvType:  "rtype",
+				ok:        true,
+			},
+		},
+		{
+			name: "method target with value receiver",
+			line: "//go:linkname x time.(Time).abs",
+			want: parsed{
+				form:      FormTwoArg,
+				localName: "x",
+				targetRaw: "time.(Time).abs",
+				pkgPath:   "time",
+				name:      "abs",
+				recvType:  "Time",
+				ok:        true,
+			},
+		},
+		{
+			name: "method target with nested pkg path",
+			line: "//go:linkname x example.com/m/internal/x.(*T).M",
+			want: parsed{
+				form:      FormTwoArg,
+				localName: "x",
+				targetRaw: "example.com/m/internal/x.(*T).M",
+				pkgPath:   "example.com/m/internal/x",
+				name:      "M",
+				recvType:  "T",
+				ok:        true,
+			},
+		},
 	}
 
 	for _, tt := range tests {
