@@ -29,7 +29,12 @@ type parsed struct {
 	targetRaw string
 	pkgPath   string
 	name      string
-	warnings  []string
+	// recvType is the receiver type name for method targets of the form
+	// `pkg.(Recv).Method` or `pkg.(*Recv).Method'. The leading "*" is
+	// stripped; recvType holds just the bare type identifier (e.g.
+	// "rtype"). Empty for non-method targets.
+	recvType string
+	warnings []string
 	// ok reports whether the comment is a //go:linkname directive at all.
 	// A non-directive line returns ok=false and zero parsed.
 	ok bool
@@ -43,16 +48,15 @@ type parsed struct {
 //
 //	//go:linkname localname                    (one-arg)
 //	//go:linkname localname pkgpath.name       (two-arg)
-//	//go:linkname localname symname            (two-arg-extern; cgo,
-//	                                            sanitizer hooks, FIPS info)
+//	//go:linkname localname symname            (two-arg-extern; cgo, sanitizer hooks, FIPS info)
 //
 // The trailing-tail trim mirrors gopls (linkname.go): if a stray // appears
 // later on the line, everything from there is dropped and the remainder is
 // re-trimmed. This handles `//go:linkname f pkg.g //@hover(...)` style.
 //
 // Malformed inputs (wrong arg count, leading/trailing dot in target) still
-// return ok=true with form set conservatively and a warning recorded;
-// callers should attach the warnings to the emitted Record.
+// return ok=true with form set conservatively and a warning recorded; callers
+// should attach the warnings to the emitted Record.
 func parseDirective(line string) parsed {
 	if !strings.HasPrefix(line, directivePrefix) {
 		return parsed{}
@@ -85,6 +89,13 @@ func parseDirective(line string) parsed {
 			targetRaw: parts[2],
 			ok:        true,
 		}
+		if pkg, recv, name, ok := splitMethodTarget(parts[2]); ok {
+			p.form = FormTwoArg
+			p.pkgPath = pkg
+			p.recvType = recv
+			p.name = name
+			return p
+		}
 		dot := strings.LastIndexByte(parts[2], '.')
 		switch {
 		case dot < 0:
@@ -110,4 +121,99 @@ func parseDirective(line string) parsed {
 			warnings: []string{WarnMalformedDirective},
 		}
 	}
+}
+
+// splitMethodTarget recognizes the method-on-receiver target forms:
+//
+//	pkg.(Recv).Method
+//	pkg.(*Recv).Method
+//	pkg.Recv.Method      // value receiver, no parens (stdlib-only convention)
+//
+// On match it returns (pkgPath, receiverTypeName, methodName, true). The
+// leading "*" on the receiver, if any, is stripped from receiverTypeName.  On
+// non-match it returns ("", "", "", false), letting the caller fall back to the
+// simple last-dot split.
+//
+// The stdlib uses the parenthesized form heavily in reflect/badlinkname.go to
+// alias methods on unexported types (e.g.  //go:linkname x
+// reflect.(*rtype).Align), since the compiler refuses //go:linkname directives
+// placed *on* methods directly. The bare-receiver form (pkg.Recv.Method)
+// appears in net/http and time -- it is unambiguous because Go import paths use
+// "/" as a separator, so the segment between the last two dots cannot legally
+// be a package-path component.
+//
+// The target syntax is human-readable convention -- the compiler stores the
+// second argument as an opaque linker symbol -- so recognition here is purely a
+// navigation aid.
+func splitMethodTarget(s string) (string, string, string, bool) {
+	if pkg, recv, method, ok := splitParenMethodTarget(s); ok {
+		return pkg, recv, method, true
+	}
+	return splitBareMethodTarget(s)
+}
+
+// splitParenMethodTarget handles `pkg.(Recv).Method' and `pkg.(*Recv).Method'.
+func splitParenMethodTarget(s string) (string, string, string, bool) {
+	open := strings.IndexByte(s, '(')
+	if open < 2 || s[open-1] != '.' {
+		return "", "", "", false
+	}
+	close := strings.IndexByte(s[open:], ')')
+	if close < 0 {
+		return "", "", "", false
+	}
+	close += open
+	// After ')' we expect ".Method" with at least one identifier char.
+	if close+2 >= len(s) || s[close+1] != '.' {
+		return "", "", "", false
+	}
+	pkg := s[:open-1]
+	recv := strings.TrimPrefix(s[open+1:close], "*")
+	method := s[close+2:]
+	if pkg == "" || !isGoIdent(recv) || !isGoIdent(method) {
+		return "", "", "", false
+	}
+	return pkg, recv, method, true
+}
+
+// splitBareMethodTarget handles `pkg.Recv.Method' (value receiver, no
+// parens). The discriminator vs a plain `pkgpath.name' target is that
+// the segment between the last two dots must be a Go identifier --
+// which excludes import-path segments containing "/".
+func splitBareMethodTarget(s string) (string, string, string, bool) {
+	last := strings.LastIndexByte(s, '.')
+	if last < 0 {
+		return "", "", "", false
+	}
+	prev := strings.LastIndexByte(s[:last], '.')
+	if prev < 0 {
+		return "", "", "", false
+	}
+	pkg := s[:prev]
+	recv := s[prev+1 : last]
+	method := s[last+1:]
+	if pkg == "" || !isGoIdent(recv) || !isGoIdent(method) {
+		return "", "", "", false
+	}
+	return pkg, recv, method, true
+}
+
+// isGoIdent reports whether s is a non-empty Go identifier (ASCII-only;
+// good enough for the stdlib symbols we navigate, which are ASCII by
+// convention).
+func isGoIdent(s string) bool {
+	if s == "" {
+		return false
+	}
+	for i, c := range s {
+		switch {
+		case c == '_':
+		case c >= 'a' && c <= 'z':
+		case c >= 'A' && c <= 'Z':
+		case i > 0 && c >= '0' && c <= '9':
+		default:
+			return false
+		}
+	}
+	return true
 }

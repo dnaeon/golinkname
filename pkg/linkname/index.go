@@ -40,7 +40,11 @@ func Index(dir string) ([]Record, error) {
 		recs := scanFile(abs, rel)
 		for i := range recs {
 			if recs[i].Target != nil {
-				recs[i].Target.Resolved = r.resolve(recs[i].Target.PkgPath, recs[i].Target.Name)
+				recs[i].Target.Resolved = r.resolve(
+					recs[i].Target.PkgPath,
+					recs[i].Target.Name,
+					recs[i].Target.RecvType,
+				)
 				if recs[i].Target.Resolved == nil {
 					recs[i].Target.Resolved = []ResolvedLocation{}
 				}

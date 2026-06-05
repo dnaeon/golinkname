@@ -135,9 +135,17 @@ type Target struct {
 	// the last dot in Raw). Empty for malformed directives.
 	PkgPath string `json:"pkgPath"`
 
-	// Name is the symbol name portion of the target (everything after
-	// the last dot in Raw). Empty for malformed directives.
+	// Name is the symbol name portion of the target (everything after the
+	// last dot in Raw). Empty for malformed directives.
 	Name string `json:"name"`
+
+	// RecvType, when non-empty, marks the target as a method on the named
+	// receiver type. Set for the `pkg.(Recv).Method' and
+	// `pkg.(*Recv).Method' target shapes; the leading "*" is
+	// stripped. Empty for free-function targets. Used by the resolver to
+	// disambiguate methods that share an unqualified name across multiple
+	// types in the same package.
+	RecvType string `json:"recvType,omitempty"`
 
 	// Resolved is the list of source locations matching PkgPath.Name.
 	// Always non-nil; an empty slice means the target was not found
