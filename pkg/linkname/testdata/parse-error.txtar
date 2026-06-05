@@ -14,16 +14,22 @@ func bar() string { return "" }
 -- broken/broken.go --
 package broken
 
+//go:linkname foo example.com/m/ok.bar
 func not valid go syntax
 -- want.json --
 [
-  {"file": "broken/broken.go", "schemaVersion": 1, "parseError": "PRESENT"},
+  {
+    "schemaVersion": 1,
+    "file": "broken/broken.go",
+    "parseError": "/var/folders/js/20fgv2d52xl5pgmfw68w8lr40000gn/T/TestIndex_Txtarparse-error2609329583/001/broken/broken.go:4:10: expected '(', found valid"
+  },
   {
     "schemaVersion": 1,
     "file": "ok/ok.go",
     "line": 5,
     "col": 1,
     "form": "two-arg",
+    "direction": "pull",
     "localName": "foo",
     "declName": "foo",
     "declKind": "func",
@@ -32,7 +38,12 @@ func not valid go syntax
       "pkgPath": "example.com/m/ok",
       "name": "bar",
       "resolved": [
-        {"file": "ok/ok.go", "line": 8, "col": 6, "inModule": true}
+        {
+          "file": "ok/ok.go",
+          "line": 8,
+          "col": 6,
+          "inModule": true
+        }
       ]
     },
     "hasUnsafeImport": true,

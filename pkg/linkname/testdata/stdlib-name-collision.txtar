@@ -21,6 +21,7 @@ func runtime_rand() uint64
     "line": 5,
     "col": 1,
     "form": "two-arg",
+    "direction": "pull",
     "localName": "runtime_rand",
     "declName": "runtime_rand",
     "declKind": "func",

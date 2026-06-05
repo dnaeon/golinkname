@@ -24,6 +24,7 @@ func f() { println("hi") }
     "line": 5,
     "col": 1,
     "form": "two-arg",
+    "direction": "push",
     "localName": "f",
     "declName": "f",
     "declKind": "func",
@@ -32,7 +33,12 @@ func f() { println("hi") }
       "pkgPath": "example.com/m/upper",
       "name": "g",
       "resolved": [
-        {"file": "upper/upper.go", "line": 6, "col": 6, "inModule": true}
+        {
+          "file": "upper/upper.go",
+          "line": 6,
+          "col": 6,
+          "inModule": true
+        }
       ]
     },
     "hasUnsafeImport": true,
@@ -44,6 +50,7 @@ func f() { println("hi") }
     "line": 5,
     "col": 1,
     "form": "one-arg",
+    "direction": "pull",
     "localName": "g",
     "declName": "g",
     "declKind": "func",

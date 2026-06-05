@@ -17,6 +17,7 @@ func gopark(unlockf func() bool, reason uint8, traceEv byte, traceskip int)
     "line": 5,
     "col": 1,
     "form": "two-arg",
+    "direction": "pull",
     "localName": "gopark",
     "declName": "gopark",
     "declKind": "func",

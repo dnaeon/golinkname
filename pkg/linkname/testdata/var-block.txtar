@@ -35,6 +35,7 @@ var inBlockTarget int
     "line": 7,
     "col": 1,
     "form": "two-arg",
+    "direction": "pull",
     "localName": "single",
     "declName": "single",
     "declKind": "var",
@@ -43,7 +44,12 @@ var inBlockTarget int
       "pkgPath": "example.com/m/b",
       "name": "singleTarget",
       "resolved": [
-        {"file": "b/b.go", "line": 3, "col": 5, "inModule": true}
+        {
+          "file": "b/b.go",
+          "line": 3,
+          "col": 5,
+          "inModule": true
+        }
       ]
     },
     "hasUnsafeImport": true,
@@ -55,6 +61,7 @@ var inBlockTarget int
     "line": 15,
     "col": 2,
     "form": "two-arg",
+    "direction": "pull",
     "localName": "inBlock",
     "declName": "inBlock",
     "declKind": "var",
@@ -63,7 +70,12 @@ var inBlockTarget int
       "pkgPath": "example.com/m/b",
       "name": "inBlockTarget",
       "resolved": [
-        {"file": "b/b.go", "line": 4, "col": 5, "inModule": true}
+        {
+          "file": "b/b.go",
+          "line": 4,
+          "col": 5,
+          "inModule": true
+        }
       ]
     },
     "hasUnsafeImport": true,

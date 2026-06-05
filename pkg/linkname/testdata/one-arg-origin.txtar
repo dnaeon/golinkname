@@ -17,6 +17,7 @@ func foo() string { return "" }
     "line": 5,
     "col": 1,
     "form": "one-arg",
+    "direction": "push",
     "localName": "foo",
     "declName": "foo",
     "declKind": "func",

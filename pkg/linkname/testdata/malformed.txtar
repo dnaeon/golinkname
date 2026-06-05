@@ -20,6 +20,7 @@ func bar() string
     "line": 5,
     "col": 1,
     "form": "two-arg",
+    "direction": "pull",
     "localName": "foo",
     "declName": "foo",
     "declKind": "func",
@@ -30,7 +31,9 @@ func bar() string
       "resolved": []
     },
     "hasUnsafeImport": true,
-    "warnings": ["malformed-directive"]
+    "warnings": [
+      "malformed-directive"
+    ]
   },
   {
     "schemaVersion": 1,
@@ -38,6 +41,7 @@ func bar() string
     "line": 8,
     "col": 1,
     "form": "two-arg",
+    "direction": "pull",
     "localName": "bar",
     "declName": "bar",
     "declKind": "func",
@@ -48,6 +52,8 @@ func bar() string
       "resolved": []
     },
     "hasUnsafeImport": true,
-    "warnings": ["malformed-directive"]
+    "warnings": [
+      "malformed-directive"
+    ]
   }
 ]

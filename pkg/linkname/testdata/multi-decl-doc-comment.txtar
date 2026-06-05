@@ -23,6 +23,7 @@ func qux() string { return "" }
     "line": 5,
     "col": 1,
     "form": "two-arg",
+    "direction": "pull",
     "localName": "foo",
     "declName": "foo",
     "declKind": "func",
@@ -31,7 +32,12 @@ func qux() string { return "" }
       "pkgPath": "example.com/m/b",
       "name": "bar",
       "resolved": [
-        {"file": "b/b.go", "line": 3, "col": 6, "inModule": true}
+        {
+          "file": "b/b.go",
+          "line": 3,
+          "col": 6,
+          "inModule": true
+        }
       ]
     },
     "hasUnsafeImport": true,
@@ -43,6 +49,7 @@ func qux() string { return "" }
     "line": 6,
     "col": 1,
     "form": "two-arg",
+    "direction": "pull",
     "localName": "baz",
     "declName": "foo",
     "declKind": "func",
@@ -51,7 +58,12 @@ func qux() string { return "" }
       "pkgPath": "example.com/m/b",
       "name": "qux",
       "resolved": [
-        {"file": "b/b.go", "line": 4, "col": 6, "inModule": true}
+        {
+          "file": "b/b.go",
+          "line": 4,
+          "col": 6,
+          "inModule": true
+        }
       ]
     },
     "hasUnsafeImport": true,
