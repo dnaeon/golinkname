@@ -30,10 +30,13 @@ import (
 	"github.com/dnaeon/golinkname/pkg/linkname"
 )
 
+// progName is the name of the CLI tool.
+const progName = "golinkname"
+
 func main() {
 	cmd := newCommand(os.Stdout, os.Stderr)
 	if err := cmd.Run(context.Background(), os.Args); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		fmt.Fprintf(os.Stderr, "%s: %v\n", progName, err)
 		os.Exit(1)
 	}
 }
@@ -52,13 +55,13 @@ func newCommand(stdout, stderr io.Writer) *cli.Command {
 	}
 
 	return &cli.Command{
-		Name:                  "golinkname",
+		Name:                  progName,
 		Usage:                 "Index //go:linkname directives in a Go module.",
 		Writer:                stdout,
 		ErrWriter:             stderr,
 		EnableShellCompletion: true,
 		CommandNotFound: func(_ context.Context, cmd *cli.Command, name string) {
-			fmt.Fprintf(cmd.ErrWriter, "golinkname: unknown subcommand %q\n", name)
+			fmt.Fprintf(cmd.ErrWriter, "%s: unknown subcommand %q\n", progName, name)
 		},
 		Commands: []*cli.Command{
 			{
@@ -84,7 +87,7 @@ func newCommand(stdout, stderr io.Writer) *cli.Command {
 				Flags:     []cli.Flag{dirFlag, prettyFlag},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.NArg() != 1 {
-						return fmt.Errorf("golinkname refs: expected exactly one <pkgpath>.<name> argument")
+						return fmt.Errorf("refs: expected exactly one <pkgpath>.<name> argument")
 					}
 					return runRefs(cmd, cmd.String("dir"), cmd.Bool("pretty"), cmd.Args().First())
 				},
@@ -96,7 +99,7 @@ func newCommand(stdout, stderr io.Writer) *cli.Command {
 				Flags:     []cli.Flag{dirFlag, prettyFlag},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.NArg() != 1 {
-						return fmt.Errorf("golinkname related: expected exactly one <pkgpath>.<name> argument")
+						return fmt.Errorf("related: expected exactly one <pkgpath>.<name> argument")
 					}
 					return runRelated(cmd, cmd.String("dir"), cmd.Bool("pretty"), cmd.Args().First())
 				},
@@ -132,7 +135,7 @@ func newCommand(stdout, stderr io.Writer) *cli.Command {
 func runIndex(cmd *cli.Command, dir string, pretty bool, file string) error {
 	records, err := linkname.Index(dir)
 	if err != nil {
-		return fmt.Errorf("golinkname: %w", err)
+		return err
 	}
 	if file != "" {
 		filtered := make([]linkname.Record, 0, len(records))
@@ -158,7 +161,7 @@ func runRefs(cmd *cli.Command, dir string, pretty bool, query string) error {
 
 	records, err := linkname.Index(dir)
 	if err != nil {
-		return fmt.Errorf("golinkname: %w", err)
+		return err
 	}
 	filtered := make([]linkname.Record, 0, len(records))
 	for _, r := range records {
@@ -190,11 +193,11 @@ func runRelated(cmd *cli.Command, dir string, pretty bool, query string) error {
 
 	mod, err := linkname.FindModule(dir)
 	if err != nil {
-		return fmt.Errorf("golinkname: %w", err)
+		return err
 	}
 	records, err := linkname.Index(dir)
 	if err != nil {
-		return fmt.Errorf("golinkname: %w", err)
+		return err
 	}
 
 	filtered := make([]linkname.Record, 0, len(records))
@@ -220,12 +223,13 @@ func runRelated(cmd *cli.Command, dir string, pretty bool, query string) error {
 }
 
 // splitQuery validates a `<pkgpath>.<name>' query string and returns its two
-// halves. The error message is prefixed with cmd so users see `golinkname
-// refs:' or `golinkname related:' rather than a generic message.
+// halves. The error message is prefixed with cmd so users see `refs:' or
+// `related:' rather than a generic message; [main] adds the `golinkname:'
+// program prefix on top.
 func splitQuery(query, cmd string) (string, string, error) {
 	dot := strings.LastIndex(query, ".")
 	if dot <= 0 || dot == len(query)-1 {
-		return "", "", fmt.Errorf("golinkname %s: %q is not a valid <pkgpath>.<name>", cmd, query)
+		return "", "", fmt.Errorf("%s: %q is not a valid <pkgpath>.<name>", cmd, query)
 	}
 	return query[:dot], query[dot+1:], nil
 }
@@ -261,7 +265,7 @@ func filePkgPath(mod *linkname.Module, relFile string) string {
 func runList(cmd *cli.Command, dir, file string) error {
 	records, err := linkname.Index(dir)
 	if err != nil {
-		return fmt.Errorf("golinkname: %w", err)
+		return err
 	}
 
 	tw := tabwriter.NewWriter(cmd.Root().Writer, 0, 0, 2, ' ', 0)
@@ -308,7 +312,7 @@ func runList(cmd *cli.Command, dir, file string) error {
 			r.File, r.Line, formatKindForm(r.DeclKind, r.Form), direction, r.LocalName, target, resolved, warnings)
 	}
 	if err := tw.Flush(); err != nil {
-		return fmt.Errorf("golinkname: %w", err)
+		return err
 	}
 	return nil
 }
@@ -347,7 +351,7 @@ func emitJSON(w io.Writer, records []linkname.Record, pretty bool) error {
 	}
 	enc.SetEscapeHTML(false)
 	if err := enc.Encode(records); err != nil {
-		return fmt.Errorf("golinkname: %w", err)
+		return err
 	}
 	return nil
 }
