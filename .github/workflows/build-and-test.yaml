@@ -1,0 +1,72 @@
+name: Build and Test
+on:
+  push:
+    branches-ignore:
+      - 'renovate/**'
+      - 'dependabot/**'
+    paths-ignore:
+      - 'editor/emacs/**'
+      - '**.md'
+  pull_request:
+    paths-ignore:
+      - 'editor/emacs/**'
+      - '**.md'
+
+permissions:
+  contents: read
+
+jobs:
+  run-tests:
+    strategy:
+      matrix:
+        go-version: [stable]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ matrix.go-version }}
+          check-latest: true
+      - name: Check Go module dependencies
+        run: |
+          set -eu
+          make tidy
+          git diff -s --exit-code || ( echo 'Go module dependencies are out of date, please run "make tidy"' && exit 1 )
+      - name: Check formatting
+        run: |
+          set -eu
+          _diff=$( gofmt -l . )
+          if [[ -n "${_diff}" ]]; then
+            echo "The following files are not gofmt'd:"
+            echo "${_diff}"
+            exit 1
+          fi
+      - name: Run vet
+        run: |
+          set -eu
+          make vet
+      - name: Run tests
+        run: |
+          set -eu
+          make test
+      - name: Run tests with race detector
+        run: |
+          set -eu
+          make test-race
+      - name: Build binary
+        run: |
+          set -eu
+          make build
+
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Build OCI image
+        uses: docker/build-push-action@v7
+        with:
+          push: false
+          tags: dnaeon/golinkname:latest
