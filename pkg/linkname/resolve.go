@@ -14,7 +14,7 @@ import (
 )
 
 // resolver finds source locations for a (pkgPath, name) pair within the scope
-// of a single Module. The current scope is intentionally narrow: only targets
+// of a single [Module]. The current scope is intentionally narrow: only targets
 // that map to a directory inside the module's own tree are resolved. Stdlib and
 // external-dependency targets are left unresolved (resolve returns an empty
 // slice without error).
@@ -191,8 +191,8 @@ func (r *resolver) packageDir(pkgPath string) (string, bool) {
 }
 
 // matchTopLevelDecl returns the position of a top-level declaration named name,
-// if decl declares it. For GenDecl the position returned is the position of the
-// matching name inside its ValueSpec.
+// if decl declares it. For [ast.GenDecl] the position returned is the position of the
+// matching name inside its [ast.ValueSpec].
 //
 // When recvType is non-empty, only methods whose receiver type identifier
 // equals recvType are matched (free functions and vars are skipped). The

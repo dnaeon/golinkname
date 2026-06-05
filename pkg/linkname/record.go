@@ -28,7 +28,7 @@ const (
 	// The symbol is not a Go target -- it is supplied by cgo, the
 	// runtime, a sanitizer (TSAN/libfuzzer), or a special compiler
 	// identifier (e.g. `go:fipsinfo'). Well-formed, just not navigable
-	// to a Go declaration; resolvers leave `Target.Resolved' empty.
+	// to a Go declaration; resolvers leave [Target.Resolved] empty.
 	FormTwoArgExtern Form = "two-arg-extern"
 )
 
@@ -47,7 +47,7 @@ const (
 // publishing it under a linker name) or a pull (this side has no body and is
 // asking the linker to fill it in from elsewhere).
 //
-// Direction is a function of (Form, has-body). The cases:
+// Direction is a function of ([Form], has-body). The cases:
 //
 // One-arg with body -- push (Case 1).
 // The declaration has a real implementation; the directive publishes it under
@@ -138,7 +138,7 @@ type Record struct {
 	// Form is the syntactic form of the directive (one-arg or two-arg).
 	Form Form `json:"form,omitempty"`
 
-	// Direction classifies the directive as a push or pull. See Direction's
+	// Direction classifies the directive as a push or pull. See [Direction]'s
 	// docstring for the (form, has-body) -> direction table. Empty for
 	// malformed directives and parse-error records.
 	Direction Direction `json:"direction,omitempty"`
@@ -156,7 +156,7 @@ type Record struct {
 	DeclKind DeclKind `json:"declKind,omitempty"`
 
 	// Target is the parsed second argument of a two-arg directive. Nil for
-	// FormOneArg directives.
+	// [FormOneArg] directives.
 	Target *Target `json:"target"`
 
 	// HasUnsafeImport reports whether the file containing the directive
@@ -213,7 +213,7 @@ type Target struct {
 	Resolved []ResolvedLocation `json:"resolved"`
 }
 
-// ResolvedLocation is one source location matching a Target's pkgPath.name.
+// ResolvedLocation is one source location matching a [Target]'s pkgPath.name.
 // A single target may resolve to multiple locations when the package has
 // build-tag-gated variants of the same top-level decl.
 type ResolvedLocation struct {

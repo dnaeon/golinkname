@@ -6,7 +6,7 @@
 // compiler directives. It walks a Go module, parses every linkname
 // directive (both one-argument and two-argument forms), source-resolves
 // targets that map to in-module packages, and returns a stable JSON-shaped
-// Record stream suitable for editor and LSP integration.
+// [Record] stream suitable for editor and LSP integration.
 //
 // The package intentionally avoids go/types and go/packages: it operates
 // entirely on go/parser output, which is sufficient because //go:linkname
@@ -15,7 +15,7 @@ package linkname
 
 import "path/filepath"
 
-// Index walks the Go module enclosing dir and returns one Record per
+// Index walks the Go module enclosing dir and returns one [Record] per
 // //go:linkname directive observed, plus one parseError record per file
 // the parser could not handle. Records are returned in walk order
 // (filesystem traversal order), with directives within a file in source

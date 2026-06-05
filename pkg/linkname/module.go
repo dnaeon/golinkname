@@ -35,7 +35,7 @@ type Module struct {
 }
 
 // FindModule walks up from start until it finds a directory containing a
-// go.mod, parses it, and returns the resulting Module. If start is empty
+// go.mod, parses it, and returns the resulting [Module]. If start is empty
 // the current working directory is used. Returns an error if no enclosing
 // module is found or the go.mod cannot be parsed.
 func FindModule(start string) (*Module, error) {

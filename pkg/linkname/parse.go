@@ -20,7 +20,7 @@ import "strings"
 // directive. The compiler accepts no leading spaces between // and "go:".
 const directivePrefix = "//go:linkname"
 
-// parsed is the result of parseDirective. localName is the first argument
+// parsed is the result of [parseDirective]. localName is the first argument
 // (declared symbol on this side of the alias). target is the second
 // argument string, empty for the one-argument form.
 type parsed struct {
