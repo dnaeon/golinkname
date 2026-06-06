@@ -56,7 +56,7 @@ func newCommand(stdout, stderr io.Writer) *cli.Command {
 
 	return &cli.Command{
 		Name:                  progName,
-		Usage:                 "lookup //go:linkname directives in a Go module",
+		Usage:                 "Lookup //go:linkname directives in a Go module",
 		Writer:                stdout,
 		ErrWriter:             stderr,
 		EnableShellCompletion: true,
@@ -66,7 +66,7 @@ func newCommand(stdout, stderr io.Writer) *cli.Command {
 		Commands: []*cli.Command{
 			{
 				Name:      "index",
-				Usage:     "emit a JSON array of every directive in the module",
+				Usage:     "Emit a JSON array of every directive in the module",
 				ArgsUsage: " ",
 				Flags: []cli.Flag{
 					dirFlag,
@@ -82,7 +82,7 @@ func newCommand(stdout, stderr io.Writer) *cli.Command {
 			},
 			{
 				Name:      "refs",
-				Usage:     "find directives whose target is exactly <pkgpath>.<name>",
+				Usage:     "Find directives whose target is exactly <pkgpath>.<name>",
 				ArgsUsage: "<pkgpath>.<name>",
 				Flags:     []cli.Flag{dirFlag, prettyFlag},
 				Action: func(_ context.Context, cmd *cli.Command) error {
@@ -94,7 +94,7 @@ func newCommand(stdout, stderr io.Writer) *cli.Command {
 			},
 			{
 				Name:      "related",
-				Usage:     "find every directive related to <pkgpath>.<name>",
+				Usage:     "Find every directive related to <pkgpath>.<name>",
 				ArgsUsage: "<pkgpath>.<name>",
 				Flags:     []cli.Flag{dirFlag, prettyFlag},
 				Action: func(_ context.Context, cmd *cli.Command) error {
@@ -106,7 +106,7 @@ func newCommand(stdout, stderr io.Writer) *cli.Command {
 			},
 			{
 				Name:      "list",
-				Usage:     "display a table of discovered directives",
+				Usage:     "Display a table of discovered directives",
 				ArgsUsage: " ",
 				Flags: []cli.Flag{
 					dirFlag,
