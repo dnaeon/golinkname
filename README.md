@@ -3,7 +3,7 @@
 A tool for indexing and navigating through `//go:linkname` compiler directives
 in Go modules.
 
-The [//go:linkname directive](https://pkg.go.dev/cmd/compile#hdr-Compiler_Directives))
+The [//go:linkname directive](https://pkg.go.dev/cmd/compile#hdr-Compiler_Directives)
 creates a linker-level alias between two object-file symbols, letting one
 package reach an unexported declaration in another package.
 
