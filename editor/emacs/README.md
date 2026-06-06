@@ -4,6 +4,8 @@ An Emacs Lisp package (`golinkname.el`), which wraps the
 [golinkname](https://github.com/dnaeon/golinkname) CLI for navigating through
 `//go:linkname` directives in a Go codebase.
 
+![golinkname-emacs demo](../../images/golinkname-emacs.gif)
+
 # Install the binary
 
 `golinkname.el` shells out to the `golinkname` binary, so install that
