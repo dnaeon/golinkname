@@ -133,10 +133,9 @@ for more details on how to install and use it.
 # Credits
 
 Portions of `pkg/linkname/parse.go` are derived from
-[gopls/internal/golang/linkname.go](https://github.com/golang/tools/blob/master/gopls/internal/golang/linkname.go)
-in `golang.org/x/tools`.
+[gopls/internal/golang/linkname.go](https://github.com/golang/tools/blob/master/gopls/internal/golang/linkname.go) in `golang.org/x/tools`.
 
 The original code is copyright of The Go Authors and is distributed under the
-3-clause BSD license; the upstream license header is preserved verbatim at the
+3-clause BSD license. The upstream license header is preserved verbatim at the
 top of that file, and the full upstream license text is reproduced in
-[`LICENSE-third-party`](LICENSE-third-party).
+[LICENSE-third-party](LICENSE-third-party).
