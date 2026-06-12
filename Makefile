@@ -24,11 +24,11 @@ install: ## go install the CLI into GOBIN.
 
 .PHONY: test
 test: ## Run all tests.
-	$(GOCMD) test $(PKG)
+	$(GOCMD) test -v $(PKG)
 
 .PHONY: test-race
 test-race: ## Run all tests with the race detector enabled.
-	$(GOCMD) test -race $(PKG)
+	$(GOCMD) test -v -race $(PKG)
 
 .PHONY: cover
 cover: ## Run all tests with coverage; writes coverage.out.
